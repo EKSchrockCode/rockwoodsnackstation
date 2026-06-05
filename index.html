@@ -10,7 +10,7 @@
   --teal:#096080;--teal-d:#064a60;--teal-l:#e8f4f8;
   --orange:#c16e29;--orange-l:#fff3e8;
   --g50:#f8fafc;--g100:#f1f5f9;--g200:#e2e8f0;--g400:#94a3b8;--g600:#475569;--g900:#0f172a;
-  --red:#ef4444;--red-l:#fee2e2;--green:#10b981;--r:14px;
+  --red:#ef4444;--red-l:#fee2e2;--green:#10b981;--r:14px;--yellow:#f59e0b;
 }
 *{box-sizing:border-box;margin:0;padding:0;}
 body{font-family:'DM Sans',sans-serif;background:var(--g50);color:var(--g900);min-height:100vh;}
@@ -175,6 +175,34 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
   </div></div>
 </div>
 
+<div id="p-pin" class="page">
+  <div class="modal-wrap"><div class="modal" style="max-width:320px">
+    <div class="m-ico tl">&#128274;</div>
+    <div class="m-title" id="pin-name"></div>
+    <div class="m-sub">Enter your 3-digit PIN</div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:14px" id="pin-dots">
+      <div id="pd0" style="width:18px;height:18px;border-radius:50%;border:2px solid var(--g400);transition:background .15s"></div>
+      <div id="pd1" style="width:18px;height-18px;border-radius:50%;border:2px solid var(--g400);transition:background .15s"></div>
+      <div id="pd2" style="width:18px;height:18px;border-radius:50%;border:2px solid var(--g400);transition:background .15s"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:10px" id="pin-pad">
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('1')">1</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('2')">2</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('3')">3</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('4')">4</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('5')">5</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('6')">6</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('7')">7</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('8')">8</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('9')">9</button>
+      <button class="m-btn sec" style="margin:0;font-size:13px;font-weight:700" onclick="pinBack()">&#9003;</button>
+      <button class="m-btn sec" style="margin:0;font-size:22px;font-weight:800" onclick="pinKey('0')">0</button>
+      <button class="m-btn sec" style="margin:0;font-size:13px;font-weight:700" onclick="go('emp')">Cancel</button>
+    </div>
+    <div id="pin-err" style="color:var(--red);font-size:13px;font-weight:700;display:none;margin-top:4px">Incorrect PIN — try again</div>
+  </div></div>
+</div>
+
 <div id="p-admin" class="page">
   <div class="hdr">
     <div style="min-width:60px"></div>
@@ -283,7 +311,7 @@ const D={
   cart:{},emp:null,scr:'ss',rtab:'bal'
 };
 const persist=()=>{sv('rss_e',D.emps);sv('rss_s',D.snacks);sv('rss_t',D.txs);sv('rss_v',D.venmo);sv('rss_u',D.unspKey);sv('rss_p',D.pw);sv('rss_se',D.secEmail);};
-const pageMap={ss:'p-ss',emp:'p-emp',sn:'p-sn',conf:'p-conf',login:'p-login',admin:'p-admin',rpt:'p-rpt'};
+const pageMap={ss:'p-ss',emp:'p-emp',sn:'p-sn',conf:'p-conf',login:'p-login',pin:'p-pin',admin:'p-admin',rpt:'p-rpt'};
 let idleT=null,confT=null,confS=10;
 
 function go(name){
@@ -336,10 +364,19 @@ function renderEmps(){
     return `<button class="emp-card" onclick="pickEmp('${e.id}')"><div class="emp-av">${i}</div><div class="emp-nm">${e.name}</div>${b>0?`<div class="emp-bal">$${b.toFixed(2)} owed</div>`:''}</button>`;
   }).join('');
 }
+let pinEntry='',pinTarget=null;
 function pickEmp(id){
   D.emp=D.emps.find(e=>e.id===id);D.cart={};
   document.getElementById('sn-title').textContent=`Hey ${D.emp.name.split(' ')[0]}! Pick your snacks`;
-  go('sn');
+  if(D.emp.pin){pinTarget=D.emp;pinEntry='';updPinDots();document.getElementById('pin-name').textContent=D.emp.name.split(' ')[0];document.getElementById('pin-err').style.display='none';go('pin');}
+  else go('sn');
+}
+function pinKey(d){if(pinEntry.length>=3)return;pinEntry+=d;updPinDots();if(pinEntry.length===3)setTimeout(checkPin,120);}
+function pinBack(){pinEntry=pinEntry.slice(0,-1);updPinDots();}
+function updPinDots(){[0,1,2].forEach(i=>{const el=document.getElementById(`pd${i}`);el.style.background=i<pinEntry.length?'var(--teal)':'transparent';el.style.borderColor=i<pinEntry.length?'var(--teal)':'var(--g400)';});}
+function checkPin(){
+  if(pinEntry===pinTarget.pin){document.getElementById('pin-err').style.display='none';go('sn');}
+  else{document.getElementById('pin-err').style.display='block';pinEntry='';updPinDots();setTimeout(()=>document.getElementById('pin-err').style.display='none',1800);}
 }
 function renderSnacks(){
   const g=document.getElementById('sn-grid');
@@ -374,7 +411,23 @@ function updT(){document.getElementById('t-bar').style.width=`${(confS/10)*100}%
 
 function renderAEmps(){
   const l=document.getElementById('emp-alist');
-  l.innerHTML=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<div class="a-itm"><span style="flex:1">${e.name}</span><button class="del-b" onclick="delEmp('${e.id}')">&#128465;</button></div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No employees yet</div>';
+  l.innerHTML=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`
+    <div class="a-itm" style="flex-wrap:wrap;gap:6px">
+      <span style="flex:1;min-width:120px">${e.name}</span>
+      <div style="display:flex;align-items:center;gap:6px">
+        <input id="pin-${e.id}" type="number" maxlength="3" placeholder="PIN" value="${e.pin||''}"
+          style="width:64px;padding:4px 8px;border:2px solid var(--g200);border-radius:7px;font-size:13px;font-weight:700;text-align:center"
+          oninput="this.value=this.value.slice(0,3)" onblur="savePin('${e.id}',this.value)">
+        ${e.pin?`<span style="font-size:11px;color:var(--green);font-weight:700">SET</span>`:`<span style="font-size:11px;color:var(--g400)">no PIN</span>`}
+        <button class="del-b" onclick="delEmp('${e.id}')">&#128465;</button>
+      </div>
+    </div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No employees yet</div>';
+}
+function savePin(id,val){
+  const e=D.emps.find(e=>e.id===id);if(!e)return;
+  const trimmed=val.trim().slice(0,3);
+  e.pin=trimmed.length===3?trimmed:'';
+  persist();renderAEmps();
 }
 function addEmp(){const i=document.getElementById('new-emp'),n=i.value.trim();if(!n)return;D.emps.push({id:`e-${Date.now()}`,name:n});i.value='';persist();renderAEmps();}
 function delEmp(id){if(!confirm('Remove?'))return;D.emps=D.emps.filter(e=>e.id!==id);persist();renderAEmps();}
