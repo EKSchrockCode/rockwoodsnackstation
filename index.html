@@ -502,7 +502,7 @@ function sendReport(){
   const csvLines=['Employee,Period,Amount Owed',...rows.map(v=>`${v.name},${label},$${v.total.toFixed(2)}`)].join('\n');
   const body=encodeURIComponent(`Snack Station Report — ${label}\nTotal Owed: $${grand.toFixed(2)}\n\n${csvLines||'No balances for this period'}\n\n—Rockwood Snack Station`);
   const jb=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs},null,2)],{type:'application/json'});
-  const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download=`snack-backup-${sel}.json`;ja.click();
+  const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download=`snack-backup-${new Date().toISOString().slice(0,16).replace('T','-').replace(':','-')}.json`;ja.click();
   setTimeout(()=>window.location.href=`mailto:${to}?subject=${subject}&body=${body}`,400);
 }
 function exportCSV(){
