@@ -501,7 +501,9 @@ function sendReport(){
   const subject=encodeURIComponent(`Snack Station Report - ${label}`);
   const csvLines=['Employee,Period,Amount Owed',...rows.map(v=>`${v.name},${label},$${v.total.toFixed(2)}`)].join('\n');
   const body=encodeURIComponent(`Snack Station Report — ${label}\nTotal Owed: $${grand.toFixed(2)}\n\n${csvLines||'No balances for this period'}\n\n—Rockwood Snack Station`);
-  window.location.href=`mailto:${to}?subject=${subject}&body=${body}`;
+  const jb=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs},null,2)],{type:'application/json'});
+  const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download=`snack-backup-${sel}.json`;ja.click();
+  setTimeout(()=>window.location.href=`mailto:${to}?subject=${subject}&body=${body}`,400);
 }
 function exportCSV(){
   const sel=document.getElementById('rpt-mo').value,isYTD=sel==='ytd',yr=new Date().getFullYear().toString();
