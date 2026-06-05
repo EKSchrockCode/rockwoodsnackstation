@@ -510,8 +510,8 @@ function saveUnsp(){D.unspKey=document.getElementById('unsp-in').value;persist()
 function saveSecEmail(){D.secEmail=document.getElementById('sec-email').value;persist();}
 function changePw(){const p=document.getElementById('new-pw').value.trim();if(!p)return;D.pw=p;persist();document.getElementById('new-pw').value='';const m=document.getElementById('pw-ok');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
 function markPaid(){if(!confirm(`Mark all ${ml(mk())} balances as paid?`))return;D.txs=D.txs.map(t=>t.mo===mk()?{...t,paid:true}:t);persist();alert(`${ml(mk())} marked as paid!`);}
-function exportJSON(){const b=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`snack-${mk()}.json`;a.click();}
-function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.emps)D.emps=d.emps;if(d.snacks)D.snacks=d.snacks;if(d.txs)D.txs=d.txs;persist();alert('Imported!');}catch{alert('Invalid file.');}};r.readAsText(f);}
+function exportJSON(){const b=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs,venmo:D.venmo,unspKey:D.unspKey,secEmail:D.secEmail,pw:D.pw},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`snack-${mk()}.json`;a.click();}
+function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.emps)D.emps=d.emps;if(d.snacks)D.snacks=d.snacks;if(d.txs)D.txs=d.txs;if(d.venmo!=null)D.venmo=d.venmo;if(d.unspKey!=null)D.unspKey=d.unspKey;if(d.secEmail!=null)D.secEmail=d.secEmail;if(d.pw)D.pw=d.pw;persist();refreshQR();loadSets();alert('Imported!');}catch{alert('Invalid file.');}};r.readAsText(f);}
 
 function buildMoSel(){
   const sel=document.getElementById('rpt-mo');
@@ -554,7 +554,7 @@ function sendReport(){
   const subject=encodeURIComponent(`Snack Station Report - ${label}`);
   const csvLines=['Employee,Period,Amount Owed',...rows.map(v=>`${v.name},${label},$${v.total.toFixed(2)}`)].join('\n');
   const body=encodeURIComponent(`Snack Station Report — ${label}\nTotal Owed: $${grand.toFixed(2)}\n\n${csvLines||'No balances for this period'}\n\n—Rockwood Snack Station`);
-  const jb=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs},null,2)],{type:'application/json'});
+  const jb=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs,venmo:D.venmo,unspKey:D.unspKey,secEmail:D.secEmail,pw:D.pw},null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download=`snack-backup-${new Date().toISOString().slice(0,16).replace('T','-').replace(':','-')}.json`;ja.click();
   setTimeout(()=>window.location.href=`mailto:${to}?subject=${subject}&body=${body}`,400);
 }
