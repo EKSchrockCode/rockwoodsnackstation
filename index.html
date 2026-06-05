@@ -448,7 +448,17 @@ function delSnack(id){if(!confirm('Remove?'))return;D.snacks=D.snacks.filter(s=>
 async function refImg(id){const sn=D.snacks.find(s=>s.id===id);if(!sn)return;const img=await getImg(sn.name);sn.image=img;persist();renderASnacks();}
 async function getImg(name){
   if(!D.unspKey)return'';
-  try{const r=await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(name+' snack food')}&per_page=1&orientation=squarish&client_id=${D.unspKey}`);const d=await r.json();return d.results?.[0]?.urls?.small||'';}catch{return'';}
+  try{
+    const r=await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(name+' snack food')}&per_page=1&orientation=squarish&client_id=${D.unspKey}`);
+    const d=await r.json();
+    if(!r.ok){showToast(`Unsplash error: ${d.errors?.[0]||r.status}`);return'';}
+    return d.results?.[0]?.urls?.small||'';
+  }catch(e){showToast('Image fetch failed: '+e.message);return'';}
+}
+function showToast(msg){
+  let t=document.getElementById('toast');
+  if(!t){t=document.createElement('div');t.id='toast';t.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 18px;border-radius:10px;font-size:13px;font-weight:600;z-index:9999;max-width:320px;text-align:center';document.body.appendChild(t);}
+  t.textContent=msg;t.style.display='block';clearTimeout(t._t);t._t=setTimeout(()=>t.style.display='none',4000);
 }
 
 // TRANSACTIONS TAB
