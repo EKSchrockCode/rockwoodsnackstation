@@ -434,7 +434,25 @@ function delEmp(id){if(!confirm('Remove?'))return;D.emps=D.emps.filter(e=>e.id!=
 
 function renderASnacks(){
   const l=document.getElementById('sn-alist');
-  l.innerHTML=D.snacks.map(sn=>`<div class="a-itm"><div class="sn-th">${sn.image?`<img src="${sn.image}">`:`<span>${sn.name[0]}</span>`}</div><span style="flex:1;font-weight:700">${sn.name}</span><span style="color:var(--teal);font-weight:800;margin-right:4px">$${sn.price.toFixed(2)}</span><button class="ref-b" onclick="refImg('${sn.id}')" title="Refresh image">&#8635;</button><button class="del-b" onclick="delSnack('${sn.id}')">&#128465;</button></div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No snacks yet</div>';
+  l.innerHTML=D.snacks.map(sn=>`
+    <div class="a-itm" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px">
+      <div style="display:flex;align-items:center;gap:10px">
+        <div class="sn-th">${sn.image?`<img src="${sn.image}">`:`<span>${sn.name[0]}</span>`}</div>
+        <span style="flex:1;font-weight:700">${sn.name}</span>
+        <span style="color:var(--teal);font-weight:800;margin-right:4px">$${sn.price.toFixed(2)}</span>
+        <button class="del-b" onclick="delSnack('${sn.id}')">&#128465;</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input class="a-inp" placeholder="Image URL (paste from Imgur, etc.)" value="${sn.image||''}"
+          style="flex:1;font-size:12px"
+          onchange="saveSnackImg('${sn.id}',this.value)">
+        ${sn.image?`<button class="del-b" onclick="saveSnackImg('${sn.id}','');this.closest('.a-itm').querySelector('input').value=''" title="Clear image">&#10005;</button>`:''}
+      </div>
+    </div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No snacks yet</div>';
+}
+function saveSnackImg(id,url){
+  const sn=D.snacks.find(s=>s.id===id);if(!sn)return;
+  sn.image=url.trim();persist();renderASnacks();
 }
 async function addSnack(){
   const n=document.getElementById('new-sn').value.trim(),p=parseFloat(document.getElementById('new-pr').value);
