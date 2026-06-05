@@ -495,21 +495,13 @@ function sendReport(){
   const label=isYTD?`${yr} Year to Date`:ml(sel);
   const txs=isYTD?D.txs.filter(t=>t.mo.startsWith(yr)&&!t.paid):D.txs.filter(t=>t.mo===sel&&!t.paid);
   const map={};txs.forEach(t=>{map[t.eId]=map[t.eId]||{name:t.eName,total:0};map[t.eId].total+=t.total;});
-  const rows=[['Employee','Period','Amount Owed'],...Object.values(map).map(v=>[v.name,label,`$${v.total.toFixed(2)}`])];
-  const csvBlob=new Blob([rows.map(r=>r.join(',')).join('\n')],{type:'text/csv'});
-  const csvA=document.createElement('a');csvA.href=URL.createObjectURL(csvBlob);csvA.download=`snack-balances-${sel}.csv`;csvA.click();
-  setTimeout(()=>{
-    const jb=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs},null,2)],{type:'application/json'});
-    const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download=`snack-backup-${sel}.json`;ja.click();
-  },400);
-  setTimeout(()=>{
-    const to=D.secEmail||'';
-    const subject=encodeURIComponent(`Snack Station Report - ${label}`);
-    const grand=Object.values(map).reduce((s,v)=>s+v.total,0);
-    const balLines=Object.values(map).sort((a,b)=>b.total-a.total).map(v=>`${v.name}: $${v.total.toFixed(2)}`).join('\n');
-    const body=encodeURIComponent(`Snack Station Report — ${label}\nTotal collected: $${grand.toFixed(2)}\n\nBALANCES:\n${balLines||'No balances for this period'}\n\nTwo files downloaded to your device:\n1. snack-balances-${sel}.csv\n2. snack-backup-${sel}.json\n\n—Rockwood Snack Station`);
-    window.location.href=`mailto:${to}?subject=${subject}&body=${body}`;
-  },900);
+  const rows=Object.values(map).sort((a,b)=>b.total-a.total);
+  const grand=rows.reduce((s,v)=>s+v.total,0);
+  const to=D.secEmail||'';
+  const subject=encodeURIComponent(`Snack Station Report - ${label}`);
+  const csvLines=['Employee,Period,Amount Owed',...rows.map(v=>`${v.name},${label},$${v.total.toFixed(2)}`)].join('\n');
+  const body=encodeURIComponent(`Snack Station Report — ${label}\nTotal Owed: $${grand.toFixed(2)}\n\n${csvLines||'No balances for this period'}\n\n—Rockwood Snack Station`);
+  window.location.href=`mailto:${to}?subject=${subject}&body=${body}`;
 }
 function exportCSV(){
   const sel=document.getElementById('rpt-mo').value,isYTD=sel==='ytd',yr=new Date().getFullYear().toString();
