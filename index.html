@@ -413,7 +413,8 @@ function renderAEmps(){
   const l=document.getElementById('emp-alist');
   l.innerHTML=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`
     <div class="a-itm" style="flex-wrap:wrap;gap:6px">
-      <span style="flex:1;min-width:120px">${e.name}</span>
+      <input value="${e.name}" style="flex:1;min-width:120px;border:2px solid var(--g200);border-radius:7px;padding:5px 9px;font-size:14px;font-weight:700"
+        onchange="renameEmp('${e.id}',this.value)">
       <div style="display:flex;align-items:center;gap:6px">
         <input id="pin-${e.id}" type="number" maxlength="3" placeholder="PIN" value="${e.pin||''}"
           style="width:64px;padding:4px 8px;border:2px solid var(--g200);border-radius:7px;font-size:13px;font-weight:700;text-align:center"
@@ -422,6 +423,11 @@ function renderAEmps(){
         <button class="del-b" onclick="delEmp('${e.id}')">&#128465;</button>
       </div>
     </div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No employees yet</div>';
+}
+function renameEmp(id,val){
+  const e=D.emps.find(e=>e.id===id);if(!e)return;
+  const trimmed=val.trim();if(!trimmed)return;
+  e.name=trimmed;persist();renderAEmps();
 }
 function savePin(id,val){
   const e=D.emps.find(e=>e.id===id);if(!e)return;
