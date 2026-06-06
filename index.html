@@ -221,6 +221,7 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
     <button class="a-tab on" onclick="aTab('emps',this)">&#128101; Employees</button>
     <button class="a-tab" onclick="aTab('snks',this)">&#127861; Snacks</button>
     <button class="a-tab" onclick="aTab('txns',this)">&#128467; Transactions</button>
+    <button class="a-tab" onclick="aTab('pmts',this)">&#128176; Payments</button>
     <button class="a-tab" onclick="aTab('sets',this)">&#9881; Settings</button>
   </div>
   <div class="a-body">
@@ -248,6 +249,26 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
         <select id="tx-mo-filter" class="a-inp" onchange="renderTxns()"></select>
       </div>
       <div class="a-list" id="tx-list"></div>
+    </div>
+    <div id="at-pmts" style="display:none">
+      <div class="s-sec">
+        <div class="s-ttl">Log a Payment</div>
+        <div class="s-ht">Enter a cash or other payment made by an employee</div>
+        <div class="a-row">
+          <select id="pmt-emp" class="a-inp" style="flex:2"></select>
+          <input id="pmt-amt" class="a-inp" type="number" step="0.25" min="0" placeholder="Amount $" style="flex:1">
+          <input id="pmt-date" class="a-inp" type="date" style="flex:1">
+          <button class="a-btn" onclick="addPmt()">+ Log</button>
+        </div>
+      </div>
+      <div class="s-sec">
+        <div class="s-ttl">Current Balances</div>
+        <div class="a-list" id="bal-list"></div>
+      </div>
+      <div class="s-sec">
+        <div class="s-ttl">Payment History</div>
+        <div class="a-list" id="pmt-list"></div>
+      </div>
     </div>
     <div id="at-sets" style="display:none">
       <div class="s-sec">
@@ -326,10 +347,11 @@ const D={
   emps:ld('rss_e',[{id:'e1',name:'Eric Schrock'},{id:'e2',name:'Sample Employee'}]),
   snacks:ld('rss_s',[{id:'s1',name:'Chips',price:.75,image:'',desc:'Cheetos, Doritos, Pretzels'},{id:'s2',name:'Nuts',price:1,image:'',desc:'Almonds, Cashews, Peanuts'},{id:'s3',name:'Granola Bars',price:.75,image:'',desc:'Nature Valley, Cliff Bar'},{id:'s4',name:'Candy',price:.5,image:'',desc:'Snickers, Reeses, M&Ms'}]),
   txs:ld('rss_t',[]),
+  pmts:ld('rss_pm',[]),
   venmo:ld('rss_v',''),unspKey:ld('rss_u',''),pw:ld('rss_p','rockwood1'),secEmail:ld('rss_se',''),idleSec:ld('rss_idle',60),
   cart:{},emp:null,scr:'ss',rtab:'bal'
 };
-const persist=()=>{sv('rss_e',D.emps);sv('rss_s',D.snacks);sv('rss_t',D.txs);sv('rss_v',D.venmo);sv('rss_u',D.unspKey);sv('rss_p',D.pw);sv('rss_se',D.secEmail);sv('rss_idle',D.idleSec);};
+const persist=()=>{sv('rss_e',D.emps);sv('rss_s',D.snacks);sv('rss_t',D.txs);sv('rss_pm',D.pmts);sv('rss_v',D.venmo);sv('rss_u',D.unspKey);sv('rss_p',D.pw);sv('rss_se',D.secEmail);sv('rss_idle',D.idleSec);};
 const pageMap={ss:'p-ss',emp:'p-emp',sn:'p-sn',conf:'p-conf',login:'p-login',pin:'p-pin',admin:'p-admin',rpt:'p-rpt'};
 let idleT=null,confT=null,confS=10,snSort='pop';
 
@@ -369,7 +391,10 @@ function doLogin(){
 
 const mk=(d=new Date())=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
 const ml=k=>{const[y,m]=k.split('-');return new Date(y,m-1,1).toLocaleString('default',{month:'long',year:'numeric'});};
-const empBal=(id,mo=mk())=>D.txs.filter(t=>t.eId===id&&t.mo===mo&&!t.paid).reduce((s,t)=>s+t.total,0);
+const empSpend=(id)=>D.txs.filter(t=>t.eId===id&&!t.paid).reduce((s,t)=>s+t.total,0);
+const empPaid=(id)=>D.pmts.filter(p=>p.eId===id).reduce((s,p)=>s+p.amount,0);
+const empBal=(id)=>{const net=empSpend(id)-empPaid(id);return net;};
+const balLabel=(id)=>{const net=empBal(id);if(Math.abs(net)<0.01)return{text:'All paid up',color:'var(--green)'};if(net>0)return{text:`Owes $${net.toFixed(2)}`,color:'var(--red)'};return{text:`Credit $${Math.abs(net).toFixed(2)}`,color:'var(--green)'};};
 const fmtDate=iso=>{const d=new Date(iso);return d.toLocaleDateString('default',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('default',{hour:'numeric',minute:'2-digit'});};
 
 function renderEmps(){
@@ -386,10 +411,11 @@ function renderEmps(){
 let pinEntry='',pinTarget=null;
 function pickEmp(id){
   D.emp=D.emps.find(e=>e.id===id);D.cart={};
-  const bal=empBal(D.emp.id);
+  const bl=balLabel(D.emp.id);
   document.getElementById('sn-title').textContent=`Hey ${D.emp.name.split(' ')[0]}! Pick your snacks`;
-  document.getElementById('sn-bal').textContent=bal>0?`Balance: $${bal.toFixed(2)} owed`:'';
-  document.getElementById('sn-bal').style.display=bal>0?'block':'none';
+  const balEl=document.getElementById('sn-bal');
+  balEl.textContent=bl.text;balEl.style.color=bl.color;balEl.style.background=Math.abs(empBal(D.emp.id))<0.01?'#f0fdf4':bl.color==='var(--red)'?'var(--red-l)':'#f0fdf4';
+  balEl.style.display='block';
   if(D.emp.pin){pinTarget=D.emp;pinEntry='';updPinDots();document.getElementById('pin-name').textContent=D.emp.name.split(' ')[0];document.getElementById('pin-err').style.display='none';go('pin');}
   else go('sn');
 }
@@ -559,8 +585,47 @@ function delTx(id){
 
 function aTab(tab,btn){
   document.querySelectorAll('.a-tab').forEach(b=>b.classList.remove('on'));btn.classList.add('on');
-  ['emps','snks','txns','sets'].forEach(t=>document.getElementById(`at-${t}`).style.display=t===tab?'block':'none');
+  ['emps','snks','txns','pmts','sets'].forEach(t=>document.getElementById(`at-${t}`).style.display=t===tab?'block':'none');
   if(tab==='txns')buildTxFilters();
+  if(tab==='pmts')buildPmts();
+}
+function buildPmts(){
+  const sel=document.getElementById('pmt-emp');
+  sel.innerHTML=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
+  document.getElementById('pmt-date').value=new Date().toISOString().slice(0,10);
+  renderBalList();renderPmtList();
+}
+function addPmt(){
+  const eId=document.getElementById('pmt-emp').value;
+  const amt=parseFloat(document.getElementById('pmt-amt').value);
+  const date=document.getElementById('pmt-date').value;
+  if(!eId||isNaN(amt)||amt<=0||!date)return;
+  const emp=D.emps.find(e=>e.id===eId);
+  D.pmts.push({id:`pm-${Date.now()}`,eId,eName:emp.name,amount:amt,date});
+  persist();document.getElementById('pmt-amt').value='';renderBalList();renderPmtList();
+}
+function delPmt(id){if(!confirm('Delete this payment?'))return;D.pmts=D.pmts.filter(p=>p.id!==id);persist();renderBalList();renderPmtList();}
+function renderBalList(){
+  const l=document.getElementById('bal-list');
+  const rows=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>{
+    const bl=balLabel(e.id);
+    return `<div class="a-itm"><span style="flex:1;font-weight:700">${e.name}</span><span style="font-weight:800;color:${bl.color}">${bl.text}</span></div>`;
+  });
+  l.innerHTML=rows.join('')||'<div class="a-itm" style="color:var(--g400)">No employees</div>';
+}
+function renderPmtList(){
+  const l=document.getElementById('pmt-list');
+  const sorted=[...D.pmts].sort((a,b)=>new Date(b.date)-new Date(a.date));
+  if(!sorted.length){l.innerHTML='<div class="a-itm" style="color:var(--g400)">No payments logged yet</div>';return;}
+  l.innerHTML=sorted.map(p=>`
+    <div class="a-itm">
+      <div style="flex:1">
+        <div style="font-weight:700">${p.eName}</div>
+        <div style="font-size:12px;color:var(--g400)">${new Date(p.date+'T12:00:00').toLocaleDateString('default',{month:'short',day:'numeric',year:'numeric'})}</div>
+      </div>
+      <span style="font-weight:800;color:var(--green);margin-right:8px">$${p.amount.toFixed(2)} paid</span>
+      <button class="del-b" onclick="delPmt('${p.id}')">&#128465;</button>
+    </div>`).join('');
 }
 
 function loadSets(){
@@ -578,8 +643,8 @@ function saveUnsp(){D.unspKey=document.getElementById('unsp-in').value;persist()
 function saveSecEmail(){D.secEmail=document.getElementById('sec-email').value;persist();}
 function changePw(){const p=document.getElementById('new-pw').value.trim();if(!p)return;D.pw=p;persist();document.getElementById('new-pw').value='';const m=document.getElementById('pw-ok');m.style.display='block';setTimeout(()=>m.style.display='none',2000);}
 function markPaid(){if(!confirm(`Mark all ${ml(mk())} balances as paid?`))return;D.txs=D.txs.map(t=>t.mo===mk()?{...t,paid:true}:t);persist();alert(`${ml(mk())} marked as paid!`);}
-function exportJSON(){const b=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs,venmo:D.venmo,unspKey:D.unspKey,secEmail:D.secEmail,pw:D.pw,idleSec:D.idleSec},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`snack-${new Date().toISOString().slice(0,16).replace('T','-').replace(':','-')}.json`;a.click();}
-function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.emps)D.emps=d.emps;if(d.snacks)D.snacks=d.snacks;if(d.txs)D.txs=d.txs;if(d.venmo!=null)D.venmo=d.venmo;if(d.unspKey!=null)D.unspKey=d.unspKey;if(d.secEmail!=null)D.secEmail=d.secEmail;if(d.pw)D.pw=d.pw;if(d.idleSec)D.idleSec=d.idleSec;persist();refreshQR();loadSets();alert('Imported!');}catch{alert('Invalid file.');}};r.readAsText(f);}
+function exportJSON(){const b=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs,pmts:D.pmts,venmo:D.venmo,unspKey:D.unspKey,secEmail:D.secEmail,pw:D.pw,idleSec:D.idleSec},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=`snack-${new Date().toISOString().slice(0,16).replace('T','-').replace(':','-')}.json`;a.click();}
+function importJSON(inp){const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>{try{const d=JSON.parse(e.target.result);if(d.emps)D.emps=d.emps;if(d.snacks)D.snacks=d.snacks;if(d.txs)D.txs=d.txs;if(d.venmo!=null)D.venmo=d.venmo;if(d.unspKey!=null)D.unspKey=d.unspKey;if(d.secEmail!=null)D.secEmail=d.secEmail;if(d.pw)D.pw=d.pw;if(d.idleSec)D.idleSec=d.idleSec;if(d.pmts)D.pmts=d.pmts;persist();refreshQR();loadSets();alert('Imported!');}catch{alert('Invalid file.');}};r.readAsText(f);}
 
 function buildMoSel(){
   const sel=document.getElementById('rpt-mo');
@@ -622,7 +687,7 @@ function sendReport(){
   const subject=encodeURIComponent(`Snack Station Report - ${label}`);
   const csvLines=['Employee,Period,Amount Owed',...rows.map(v=>`${v.name},${label},$${v.total.toFixed(2)}`)].join('\n');
   const body=encodeURIComponent(`Snack Station Report — ${label}\nTotal Owed: $${grand.toFixed(2)}\n\n${csvLines||'No balances for this period'}\n\n—Rockwood Snack Station`);
-  const jb=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs,venmo:D.venmo,unspKey:D.unspKey,secEmail:D.secEmail,pw:D.pw,idleSec:D.idleSec},null,2)],{type:'application/json'});
+  const jb=new Blob([JSON.stringify({emps:D.emps,snacks:D.snacks,txs:D.txs,pmts:D.pmts,venmo:D.venmo,unspKey:D.unspKey,secEmail:D.secEmail,pw:D.pw,idleSec:D.idleSec},null,2)],{type:'application/json'});
   const ja=document.createElement('a');ja.href=URL.createObjectURL(jb);ja.download=`snack-backup-${new Date().toISOString().slice(0,16).replace('T','-').replace(':','-')}.json`;ja.click();
   setTimeout(()=>window.location.href=`mailto:${to}?subject=${subject}&body=${body}`,400);
 }
