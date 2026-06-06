@@ -141,7 +141,8 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
   <div class="hdr">
     <button class="back-btn" onclick="go('emp')">&#8249; Back</button>
     <div class="hdr-title" id="sn-title">Pick your snacks</div>
-    <div class="hdr-r">
+    <div class="hdr-r" style="display:flex;align-items:center;gap:6px">
+      <button class="pill muted" id="sort-btn" onclick="toggleSort()" style="font-size:11px;padding:5px 9px">A-Z</button>
       <button class="pill" id="cart-btn" onclick="submitOrder()" style="display:none">&#10003; <span id="cart-lbl">Done</span></button>
     </div>
   </div>
@@ -312,7 +313,7 @@ const D={
 };
 const persist=()=>{sv('rss_e',D.emps);sv('rss_s',D.snacks);sv('rss_t',D.txs);sv('rss_v',D.venmo);sv('rss_u',D.unspKey);sv('rss_p',D.pw);sv('rss_se',D.secEmail);};
 const pageMap={ss:'p-ss',emp:'p-emp',sn:'p-sn',conf:'p-conf',login:'p-login',pin:'p-pin',admin:'p-admin',rpt:'p-rpt'};
-let idleT=null,confT=null,confS=10;
+let idleT=null,confT=null,confS=10,snSort='pop';
 
 function go(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
@@ -378,6 +379,16 @@ function checkPin(){
   if(pinEntry===pinTarget.pin){document.getElementById('pin-err').style.display='none';go('sn');}
   else{document.getElementById('pin-err').style.display='block';pinEntry='';updPinDots();setTimeout(()=>document.getElementById('pin-err').style.display='none',1800);}
 }
+function toggleSort(){
+  snSort=snSort==='pop'?'az':'pop';
+  document.getElementById('sort-btn').textContent=snSort==='pop'?'A-Z':'Popular';
+  renderSnacks();
+}
+function sortedSnacks(){
+  if(snSort==='az')return[...D.snacks].sort((a,b)=>a.name.localeCompare(b.name));
+  const counts={};D.txs.forEach(t=>t.items.forEach(i=>{counts[i.sId]=(counts[i.sId]||0)+i.qty;}));
+  return[...D.snacks].sort((a,b)=>(counts[b.id]||0)-(counts[a.id]||0));
+}
 function renderSnacks(){
   const g=document.getElementById('sn-grid');
   const cnt=Object.values(D.cart).reduce((s,q)=>s+q,0);
@@ -386,7 +397,7 @@ function renderSnacks(){
   btn.style.display=cnt>0?'flex':'none';
   if(cnt>0)document.getElementById('cart-lbl').textContent=`Done (${cnt}) $${tot.toFixed(2)}`;
   document.getElementById('sn-hint').style.display=cnt===0?'block':'none';
-  g.innerHTML=D.snacks.map(sn=>{
+  g.innerHTML=sortedSnacks().map(sn=>{
     const q=D.cart[sn.id]||0;
     return `<div class="sn-card${q>0?' on':''}"><div class="sn-img-w">${sn.image?`<img class="sn-img" src="${sn.image}" alt="${sn.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="sn-ph" style="${sn.image?'display:none':''}">${sn.name[0]}</div>${q>0?`<div class="sn-bdg">${q}</div>`:''}</div><div class="sn-nm">${sn.name}</div><div class="sn-pr">$${sn.price.toFixed(2)}</div><div class="sn-ctrl">${q>0?`<button class="s-min" onclick="adj('${sn.id}',-1)">&#10005;</button>`:''}<button class="s-add" onclick="adj('${sn.id}',1)">+ ${q===0?'Add':''}</button></div></div>`;
   }).join('');
