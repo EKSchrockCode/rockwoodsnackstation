@@ -459,8 +459,8 @@ function renderASnacks(){
     <div class="a-itm" style="flex-direction:column;align-items:stretch;gap:8px;padding:12px">
       <div style="display:flex;align-items:center;gap:10px">
         <div class="sn-th">${sn.image?`<img src="${sn.image}">`:`<span>${sn.name[0]}</span>`}</div>
-        <span style="flex:1;font-weight:700">${sn.name}</span>
-        <span style="color:var(--teal);font-weight:800;margin-right:4px">$${sn.price.toFixed(2)}</span>
+        <input class="a-inp" value="${sn.name}" style="flex:1;font-weight:700;font-size:14px" onchange="saveSnackName('${sn.id}',this.value)">
+        <input class="a-inp" value="${sn.price.toFixed(2)}" type="number" step="0.25" min="0" style="width:70px;font-weight:800;color:var(--teal)" onchange="saveSnackPrice('${sn.id}',this.value)">
         <button class="del-b" onclick="delSnack('${sn.id}')">&#128465;</button>
       </div>
       <input class="a-inp" placeholder="Items (e.g. Cheetos, Doritos, Pretzels)" value="${sn.desc||''}"
@@ -468,15 +468,12 @@ function renderASnacks(){
       <div style="display:flex;gap:6px;align-items:center">
         <input class="a-inp" placeholder="Image URL (paste from Imgur, etc.)" value="${sn.image||''}"
           style="flex:1;font-size:12px" onchange="saveSnackImg('${sn.id}',this.value)">
-        ${sn.image?`<button class="del-b" onclick="saveSnackImg('${sn.id}','');this.closest('.a-itm').querySelectorAll('input')[1].value=''" title="Clear image">&#10005;</button>`:''}
+        ${sn.image?`<button class="del-b" onclick="saveSnackImg('${sn.id}','');this.closest('.a-itm').querySelectorAll('input')[2].value=''" title="Clear image">&#10005;</button>`:''}
       </div>
     </div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No snacks yet</div>';
 }
-function saveSnackDesc(id,val){const sn=D.snacks.find(s=>s.id===id);if(!sn)return;sn.desc=val.trim();persist();}
-function saveSnackImg(id,url){
-  const sn=D.snacks.find(s=>s.id===id);if(!sn)return;
-  sn.image=url.trim();persist();renderASnacks();
-}
+function saveSnackName(id,val){const sn=D.snacks.find(s=>s.id===id);if(!sn||!val.trim())return;sn.name=val.trim();persist();}
+function saveSnackPrice(id,val){const sn=D.snacks.find(s=>s.id===id);if(!sn)return;const p=parseFloat(val);if(!isNaN(p)&&p>=0){sn.price=p;persist();}}
 async function addSnack(){
   const n=document.getElementById('new-sn').value.trim(),p=parseFloat(document.getElementById('new-pr').value),desc=document.getElementById('new-desc').value.trim();
   if(!n||isNaN(p))return;
