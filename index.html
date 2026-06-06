@@ -152,6 +152,9 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
   <div id="sn-bal" style="display:none;text-align:center;font-size:13px;font-weight:700;color:var(--orange);background:var(--orange-l);padding:6px 18px;"></div>
   <div class="sn-grid" id="sn-grid"></div>
   <p class="empty-h" id="sn-hint">Tap a snack to add it to your order</p>
+  <div id="sn-done-bar" style="display:none;position:sticky;bottom:0;padding:14px 18px;background:linear-gradient(to top,#fff 80%,transparent);z-index:10;">
+    <button onclick="submitOrder()" style="width:100%;padding:16px;background:var(--teal);color:#fff;border:none;border-radius:14px;font-size:18px;font-weight:800;font-family:'DM Sans',sans-serif;cursor:pointer;" id="sn-done-lbl">&#10003; Done</button>
+  </div>
 </div>
 
 <div id="p-conf" class="page">
@@ -412,8 +415,10 @@ function renderSnacks(){
   const cnt=Object.values(D.cart).reduce((s,q)=>s+q,0);
   const tot=Object.entries(D.cart).reduce((s,[id,q])=>{const sn=D.snacks.find(s=>s.id===id);return s+(sn?.price||0)*q;},0);
   const btn=document.getElementById('cart-btn');
-  btn.style.display=cnt>0?'flex':'none';
-  if(cnt>0)document.getElementById('cart-lbl').textContent=`Done (${cnt}) $${tot.toFixed(2)}`;
+  btn.style.display='none';
+  const doneBar=document.getElementById('sn-done-bar');
+  doneBar.style.display=cnt>0?'block':'none';
+  if(cnt>0)document.getElementById('sn-done-lbl').textContent=`✓ Done — ${cnt} item${cnt>1?'s':''} ($${tot.toFixed(2)})`;
   document.getElementById('sn-hint').style.display=cnt===0?'block':'none';
   g.innerHTML=sortedSnacks().map(sn=>{
     const q=D.cart[sn.id]||0;
