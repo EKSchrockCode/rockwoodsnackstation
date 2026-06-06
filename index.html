@@ -49,15 +49,16 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
 .emp-nm{font-weight:700;color:var(--g900);text-align:center;font-size:13px;line-height:1.3;}
 .emp-bal{font-size:11px;color:var(--orange);font-weight:700;background:var(--orange-l);padding:2px 8px;border-radius:20px;}
 .sn-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;padding:14px 18px 22px;overflow-y:auto;flex:1;}
-.sn-card{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:7px;background:#fff;border:2px solid var(--g200);border-radius:var(--r);padding:14px;transition:all .15s;aspect-ratio:1/1;}
+.sn-card{display:flex;flex-direction:column;align-items:center;justify-content:space-between;gap:4px;background:#fff;border:2px solid var(--g200);border-radius:var(--r);padding:14px 10px;transition:all .15s;aspect-ratio:1/1;overflow:hidden;}
 .sn-card.on{border-color:var(--teal);box-shadow:0 0 0 4px rgba(9,96,128,.09);}
-.sn-img-w{position:relative;width:88px;height:88px;}
-.sn-img{width:88px;height:88px;border-radius:11px;object-fit:cover;}
-.sn-ph{width:88px;height:88px;border-radius:11px;background:var(--teal-l);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:34px;font-weight:900;color:var(--teal);}
+.sn-img-w{position:relative;width:64px;height:64px;flex-shrink:0;}
+.sn-img{width:64px;height:64px;border-radius:9px;object-fit:cover;}
+.sn-ph{width:64px;height:64px;border-radius:9px;background:var(--teal-l);display:flex;align-items:center;justify-content:center;font-family:'Barlow Condensed',sans-serif;font-size:26px;font-weight:900;color:var(--teal);}
 .sn-bdg{position:absolute;top:-7px;right:-7px;background:var(--orange);color:#fff;border-radius:50%;width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;border:2px solid #fff;}
-.sn-nm{font-weight:700;color:var(--g900);text-align:center;font-size:13px;line-height:1.3;}
-.sn-pr{color:var(--teal);font-weight:800;font-size:16px;}
-.sn-ctrl{display:flex;gap:5px;margin-top:2px;}
+.sn-nm{font-weight:800;color:var(--g900);text-align:center;font-size:13px;line-height:1.2;}
+.sn-desc{font-size:10px;color:var(--g400);text-align:center;line-height:1.3;overflow:hidden;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;}
+.sn-pr{color:var(--teal);font-weight:800;font-size:15px;}
+.sn-ctrl{display:flex;gap:5px;}
 .s-add{display:flex;align-items:center;gap:3px;background:var(--teal);color:#fff;border-radius:7px;padding:6px 10px;font-size:12px;font-weight:700;}
 .s-min{display:flex;align-items:center;background:var(--red-l);color:var(--red);border-radius:7px;padding:6px 8px;}
 .empty-h{text-align:center;color:var(--g400);font-size:14px;padding:28px;}
@@ -226,9 +227,12 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
     </div>
     <div id="at-snks" style="display:none">
       <div class="a-row">
-        <input id="new-sn" class="a-inp" placeholder="Snack name" style="flex:2" onkeydown="if(event.key==='Enter')addSnack()">
+        <input id="new-sn" class="a-inp" placeholder="Category name" style="flex:2" onkeydown="if(event.key==='Enter')addSnack()">
         <input id="new-pr" class="a-inp" placeholder="$Price" type="number" step="0.25" min="0" style="flex:1" onkeydown="if(event.key==='Enter')addSnack()">
         <button class="a-btn" onclick="addSnack()">+ Add</button>
+      </div>
+      <div class="a-row">
+        <input id="new-desc" class="a-inp" placeholder="Items in this category (e.g. Cheetos, Doritos, Pretzels)" onkeydown="if(event.key==='Enter')addSnack()">
       </div>
       <div class="a-list" id="sn-alist"></div>
     </div>
@@ -306,7 +310,7 @@ const ld=(k,fb)=>{try{return JSON.parse(localStorage.getItem(k))??fb;}catch{retu
 const sv=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
 const D={
   emps:ld('rss_e',[{id:'e1',name:'Eric Schrock'},{id:'e2',name:'Sample Employee'}]),
-  snacks:ld('rss_s',[{id:'s1',name:'Cheetos',price:.75,image:''},{id:'s2',name:'Almonds',price:1,image:''},{id:'s3',name:'Granola Bar',price:.75,image:''},{id:'s4',name:'Pretzels',price:.5,image:''}]),
+  snacks:ld('rss_s',[{id:'s1',name:'Chips',price:.75,image:'',desc:'Cheetos, Doritos, Pretzels'},{id:'s2',name:'Nuts',price:1,image:'',desc:'Almonds, Cashews, Peanuts'},{id:'s3',name:'Granola Bars',price:.75,image:'',desc:'Nature Valley, Cliff Bar'},{id:'s4',name:'Candy',price:.5,image:'',desc:'Snickers, Reeses, M&Ms'}]),
   txs:ld('rss_t',[]),
   venmo:ld('rss_v',''),unspKey:ld('rss_u',''),pw:ld('rss_p','rockwood1'),secEmail:ld('rss_se',''),
   cart:{},emp:null,scr:'ss',rtab:'bal'
@@ -399,7 +403,7 @@ function renderSnacks(){
   document.getElementById('sn-hint').style.display=cnt===0?'block':'none';
   g.innerHTML=sortedSnacks().map(sn=>{
     const q=D.cart[sn.id]||0;
-    return `<div class="sn-card${q>0?' on':''}"><div class="sn-img-w">${sn.image?`<img class="sn-img" src="${sn.image}" alt="${sn.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="sn-ph" style="${sn.image?'display:none':''}">${sn.name[0]}</div>${q>0?`<div class="sn-bdg">${q}</div>`:''}</div><div class="sn-nm">${sn.name}</div><div class="sn-pr">$${sn.price.toFixed(2)}</div><div class="sn-ctrl">${q>0?`<button class="s-min" onclick="adj('${sn.id}',-1)">&#10005;</button>`:''}<button class="s-add" onclick="adj('${sn.id}',1)">+ ${q===0?'Add':''}</button></div></div>`;
+    return `<div class="sn-card${q>0?' on':''}"><div class="sn-img-w">${sn.image?`<img class="sn-img" src="${sn.image}" alt="${sn.name}" onerror="this.style.display='none';this.nextSibling.style.display='flex'">`:''}<div class="sn-ph" style="${sn.image?'display:none':''}">${sn.name[0]}</div>${q>0?`<div class="sn-bdg">${q}</div>`:''}</div><div class="sn-nm">${sn.name}</div>${sn.desc?`<div class="sn-desc">${sn.desc}</div>`:''}<div class="sn-pr">$${sn.price.toFixed(2)}</div><div class="sn-ctrl">${q>0?`<button class="s-min" onclick="adj('${sn.id}',-1)">&#10005;</button>`:''}<button class="s-add" onclick="adj('${sn.id}',1)">+ ${q===0?'Add':''}</button></div></div>`;
   }).join('');
 }
 function adj(id,delta){
@@ -459,25 +463,26 @@ function renderASnacks(){
         <span style="color:var(--teal);font-weight:800;margin-right:4px">$${sn.price.toFixed(2)}</span>
         <button class="del-b" onclick="delSnack('${sn.id}')">&#128465;</button>
       </div>
+      <input class="a-inp" placeholder="Items (e.g. Cheetos, Doritos, Pretzels)" value="${sn.desc||''}"
+        style="font-size:12px" onchange="saveSnackDesc('${sn.id}',this.value)">
       <div style="display:flex;gap:6px;align-items:center">
         <input class="a-inp" placeholder="Image URL (paste from Imgur, etc.)" value="${sn.image||''}"
-          style="flex:1;font-size:12px"
-          onchange="saveSnackImg('${sn.id}',this.value)">
-        ${sn.image?`<button class="del-b" onclick="saveSnackImg('${sn.id}','');this.closest('.a-itm').querySelector('input').value=''" title="Clear image">&#10005;</button>`:''}
+          style="flex:1;font-size:12px" onchange="saveSnackImg('${sn.id}',this.value)">
+        ${sn.image?`<button class="del-b" onclick="saveSnackImg('${sn.id}','');this.closest('.a-itm').querySelectorAll('input')[1].value=''" title="Clear image">&#10005;</button>`:''}
       </div>
     </div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No snacks yet</div>';
 }
+function saveSnackDesc(id,val){const sn=D.snacks.find(s=>s.id===id);if(!sn)return;sn.desc=val.trim();persist();}
 function saveSnackImg(id,url){
   const sn=D.snacks.find(s=>s.id===id);if(!sn)return;
   sn.image=url.trim();persist();renderASnacks();
 }
 async function addSnack(){
-  const n=document.getElementById('new-sn').value.trim(),p=parseFloat(document.getElementById('new-pr').value);
+  const n=document.getElementById('new-sn').value.trim(),p=parseFloat(document.getElementById('new-pr').value),desc=document.getElementById('new-desc').value.trim();
   if(!n||isNaN(p))return;
-  const id=`s-${Date.now()}`,sn={id,name:n,price:p,image:''};
-  D.snacks.push(sn);document.getElementById('new-sn').value='';document.getElementById('new-pr').value='';
+  const id=`s-${Date.now()}`,sn={id,name:n,price:p,image:'',desc};
+  D.snacks.push(sn);document.getElementById('new-sn').value='';document.getElementById('new-pr').value='';document.getElementById('new-desc').value='';
   persist();renderASnacks();
-  const img=await getImg(n);const s=D.snacks.find(s=>s.id===id);if(s){s.image=img;persist();renderASnacks();}
 }
 function delSnack(id){if(!confirm('Remove?'))return;D.snacks=D.snacks.filter(s=>s.id!==id);persist();renderASnacks();}
 async function refImg(id){const sn=D.snacks.find(s=>s.id===id);if(!sn)return;const img=await getImg(sn.name);sn.image=img;persist();renderASnacks();}
