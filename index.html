@@ -376,7 +376,7 @@ function renderEmps(){
   g.innerHTML=f.map(e=>{
     const i=e.name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
     const b=empBal(e.id);
-    return `<button class="emp-card" onclick="pickEmp('${e.id}')"><div class="emp-av">${i}</div><div class="emp-nm">${e.name}</div>${b>0?`<div class="emp-bal">$${b.toFixed(2)} owed</div>`:''}</button>`;
+    return `<button class="emp-card" onclick="pickEmp('${e.id}')"><div class="emp-av">${i}</div><div class="emp-nm">${e.name}</div></button>`;
   }).join('');
 }
 let pinEntry='',pinTarget=null;
