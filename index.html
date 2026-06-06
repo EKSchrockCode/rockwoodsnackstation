@@ -463,7 +463,8 @@ function submitOrder(){
   D.txs.push(tx);persist();
   const bal=empBal(D.emp.id);
   document.getElementById('conf-ttl').textContent=`Thanks, ${D.emp.name.split(' ')[0]}!`;
-  document.getElementById('conf-rec').innerHTML=items.map(i=>`<div class="r-row"><span>${i.qty}x ${i.name}</span><span>$${i.total.toFixed(2)}</span></div>`).join('')+`<div class="r-row tot"><span>Today's total</span><span>$${tx.total.toFixed(2)}</span></div><div class="r-row bal"><span>Month-to-date balance</span><span>$${bal.toFixed(2)}</span></div>`;
+  const bl=balLabel(D.emp.id);
+  document.getElementById('conf-rec').innerHTML=items.map(i=>`<div class="r-row"><span>${i.qty}x ${i.name}</span><span>$${i.total.toFixed(2)}</span></div>`).join('')+`<div class="r-row tot"><span>Today's total</span><span>$${tx.total.toFixed(2)}</span></div><div class="r-row" style="border-top:1px solid var(--g200);padding-top:7px;font-weight:700;color:${bl.color}"><span>Current balance</span><span>${bl.text}</span></div>`;
   go('conf');
 }
 function startConf(){confS=10;updT();confT=setInterval(()=>{confS--;updT();if(confS<=0){clearInterval(confT);go('ss');}},1000);}
