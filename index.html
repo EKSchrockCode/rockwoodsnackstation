@@ -149,6 +149,7 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
       <button class="pill" id="cart-btn" onclick="submitOrder()" style="display:none">&#10003; <span id="cart-lbl">Done</span></button>
     </div>
   </div>
+  <div id="sn-bal" style="display:none;text-align:center;font-size:13px;font-weight:700;color:var(--orange);background:var(--orange-l);padding:6px 18px;"></div>
   <div class="sn-grid" id="sn-grid"></div>
   <p class="empty-h" id="sn-hint">Tap a snack to add it to your order</p>
 </div>
@@ -382,7 +383,10 @@ function renderEmps(){
 let pinEntry='',pinTarget=null;
 function pickEmp(id){
   D.emp=D.emps.find(e=>e.id===id);D.cart={};
+  const bal=empBal(D.emp.id);
   document.getElementById('sn-title').textContent=`Hey ${D.emp.name.split(' ')[0]}! Pick your snacks`;
+  document.getElementById('sn-bal').textContent=bal>0?`Balance: $${bal.toFixed(2)} owed`:'';
+  document.getElementById('sn-bal').style.display=bal>0?'block':'none';
   if(D.emp.pin){pinTarget=D.emp;pinEntry='';updPinDots();document.getElementById('pin-name').textContent=D.emp.name.split(' ')[0];document.getElementById('pin-err').style.display='none';go('pin');}
   else go('sn');
 }
