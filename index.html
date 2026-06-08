@@ -252,7 +252,14 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
     </div>
     <div id="at-pmts" style="display:none">
       <div class="s-sec">
-        <div class="s-ttl">Log a Payment</div>
+        <div class="s-ttl">Batch Payments</div>
+        <div class="s-ht">Enter amounts for anyone who paid. Leave blank to skip. All will be logged with today's date.</div>
+        <div class="a-list" id="batch-list" style="margin-top:8px"></div>
+        <button class="a-btn" style="margin-top:10px;width:100%;justify-content:center" onclick="submitBatch()">&#10003; Log All Payments</button>
+        <div id="batch-ok" style="display:none;color:var(--green);font-size:13px;font-weight:700;margin-top:6px;text-align:center"></div>
+      </div>
+      <div class="s-sec">
+        <div class="s-ttl">Log a Single Payment</div>
         <div class="s-ht">Enter a cash or other payment made by an employee</div>
         <div class="a-row">
           <select id="pmt-emp" class="a-inp" style="flex:2"></select>
@@ -585,7 +592,39 @@ function aTab(tab,btn){
   if(tab==='txns')buildTxFilters();
   if(tab==='pmts')buildPmts();
 }
+function buildBatchList(){
+  const l=document.getElementById('batch-list');
+  l.innerHTML=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>{
+    const bl=balLabel(e.id);
+    return `<div class="a-itm" style="gap:10px">
+      <span style="flex:1;font-weight:700">${e.name}</span>
+      <span style="font-size:12px;font-weight:700;color:${bl.color};white-space:nowrap">${bl.text}</span>
+      <input type="number" step="0.25" min="0" placeholder="$0.00" data-eid="${e.id}"
+        style="width:80px;padding:5px 8px;border:2px solid var(--g200);border-radius:7px;font-size:14px;font-weight:700;text-align:right">
+    </div>`;
+  }).join('');
+}
+function submitBatch(){
+  const today=new Date().toISOString().slice(0,10);
+  let count=0;
+  document.querySelectorAll('#batch-list input[data-eid]').forEach(inp=>{
+    const amt=parseFloat(inp.value);
+    if(!isNaN(amt)&&amt>0){
+      const eId=inp.dataset.eid;
+      const emp=D.emps.find(e=>e.id===eId);
+      D.pmts.push({id:`pm-${Date.now()}-${eId}`,eId,eName:emp.name,amount:amt,date:today});
+      inp.value='';count++;
+    }
+  });
+  if(!count){alert('No amounts entered.');return;}
+  persist();
+  const ok=document.getElementById('batch-ok');
+  ok.textContent=`${count} payment${count>1?'s':''} logged!`;ok.style.display='block';
+  setTimeout(()=>ok.style.display='none',3000);
+  buildBatchList();renderBalList();renderPmtList();
+}
 function buildPmts(){
+  buildBatchList();
   const sel=document.getElementById('pmt-emp');
   sel.innerHTML=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>`<option value="${e.id}">${e.name}</option>`).join('');
   document.getElementById('pmt-date').value=new Date().toISOString().slice(0,10);
