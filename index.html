@@ -252,13 +252,6 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
     </div>
     <div id="at-pmts" style="display:none">
       <div class="s-sec">
-        <div class="s-ttl">Batch Payments</div>
-        <div class="s-ht">Enter amounts for anyone who paid. Leave blank to skip. All will be logged with today's date.</div>
-        <div class="a-list" id="batch-list" style="margin-top:8px"></div>
-        <button class="a-btn" style="margin-top:10px;width:100%;justify-content:center" onclick="submitBatch()">&#10003; Log All Payments</button>
-        <div id="batch-ok" style="display:none;color:var(--green);font-size:13px;font-weight:700;margin-top:6px;text-align:center"></div>
-      </div>
-      <div class="s-sec">
         <div class="s-ttl">Log a Single Payment</div>
         <div class="s-ht">Enter a cash or other payment made by an employee</div>
         <div class="a-row">
@@ -267,6 +260,13 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
           <input id="pmt-date" class="a-inp" type="date" style="flex:1">
           <button class="a-btn" onclick="addPmt()">+ Log</button>
         </div>
+      </div>
+      <div class="s-sec">
+        <div class="s-ttl">Batch Payments</div>
+        <div class="s-ht">Enter amounts for anyone who paid. Leave blank to skip. All will be logged with today's date.</div>
+        <div class="a-list" id="batch-list" style="margin-top:8px"></div>
+        <button class="a-btn" style="margin-top:10px;width:100%;justify-content:center" onclick="submitBatch()">&#10003; Log All Payments</button>
+        <div id="batch-ok" style="display:none;color:var(--green);font-size:13px;font-weight:700;margin-top:6px;text-align:center"></div>
       </div>
       <div class="s-sec">
         <div class="s-ttl">Current Balances</div>
