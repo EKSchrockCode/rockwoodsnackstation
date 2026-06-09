@@ -123,9 +123,6 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
       <div class="ss-qr-lbl">Scan to pay via Venmo</div>
     </div>
     <div class="ss-cash">Also accepting cash &mdash; see the coffee tin on the counter</div>
-    <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
-      <button id="lang-btn" onclick="toggleLang()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">ES</button>
-    </div>
     <div class="ss-tap"><span class="dot"></span><span id="ss-tap-lbl">TAP ANYWHERE TO START</span><span class="dot"></span></div>
   </div>
 </div>
@@ -134,7 +131,9 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
   <div class="hdr">
     <button class="back-btn" onclick="go('ss')">&#8249; Back</button>
     <div class="hdr-title">Who's grabbing a snack?</div>
-    <div class="hdr-r"></div>
+    <div class="hdr-r">
+      <button id="lang-btn" onclick="toggleLang()" style="background:var(--teal);border:none;color:#fff;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">ES</button>
+    </div>
   </div>
   <div class="sbar">
     <svg width="16" height="16" fill="none" stroke="var(--g400)" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
