@@ -478,7 +478,11 @@ function renderAEmps(){
     <div class="a-itm" style="flex-wrap:wrap;gap:6px">
       <input value="${e.name}" style="flex:1;min-width:120px;border:2px solid var(--g200);border-radius:7px;padding:5px 9px;font-size:14px;font-weight:700"
         onchange="renameEmp('${e.id}',this.value)">
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
+        <div style="display:flex;border:2px solid var(--g200);border-radius:7px;overflow:hidden;font-size:12px;font-weight:700">
+          <button onclick="setRemind('${e.id}','venmo')" style="padding:4px 10px;border:none;cursor:pointer;background:${(e.remind||'venmo')==='venmo'?'var(--teal)':'#fff'};color:${(e.remind||'venmo')==='venmo'?'#fff':'var(--g600)'}">Venmo</button>
+          <button onclick="setRemind('${e.id}','teams')" style="padding:4px 10px;border:none;cursor:pointer;background:${e.remind==='teams'?'var(--teal)':'#fff'};color:${e.remind==='teams'?'#fff':'var(--g600)'}">Teams</button>
+        </div>
         <input id="pin-${e.id}" type="number" maxlength="3" placeholder="PIN" value="${e.pin||''}"
           style="width:64px;padding:4px 8px;border:2px solid var(--g200);border-radius:7px;font-size:13px;font-weight:700;text-align:center"
           oninput="this.value=this.value.slice(0,3)" onblur="savePin('${e.id}',this.value)">
@@ -487,6 +491,7 @@ function renderAEmps(){
       </div>
     </div>`).join('')||'<div class="a-itm" style="color:var(--g400)">No employees yet</div>';
 }
+function setRemind(id,method){const e=D.emps.find(e=>e.id===id);if(!e)return;e.remind=method;persist();renderAEmps();}
 function renameEmp(id,val){
   const e=D.emps.find(e=>e.id===id);if(!e)return;
   const trimmed=val.trim();if(!trimmed)return;
@@ -644,7 +649,13 @@ function renderBalList(){
   const l=document.getElementById('bal-list');
   const rows=[...D.emps].sort((a,b)=>a.name.localeCompare(b.name)).map(e=>{
     const bl=balLabel(e.id);
-    return `<div class="a-itm"><span style="flex:1;font-weight:700">${e.name}</span><span style="font-weight:800;color:${bl.color}">${bl.text}</span></div>`;
+    const remind=e.remind||'venmo';
+    const rColor=remind==='venmo'?'#0070ba':'#6264a7';
+    return `<div class="a-itm" style="gap:8px">
+      <span style="flex:1;font-weight:700">${e.name}</span>
+      <span style="font-size:11px;font-weight:800;color:#fff;background:${rColor};padding:2px 8px;border-radius:20px">${remind==='venmo'?'Venmo':'Teams'}</span>
+      <span style="font-weight:800;color:${bl.color};white-space:nowrap">${bl.text}</span>
+    </div>`;
   });
   l.innerHTML=rows.join('')||'<div class="a-itm" style="color:var(--g400)">No employees</div>';
 }
