@@ -132,7 +132,7 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
     <button class="back-btn" onclick="go('ss')">&#8249; Back</button>
     <div class="hdr-title">Who's grabbing a snack?</div>
     <div class="hdr-r">
-      <button id="lang-btn" onclick="toggleLang()" style="background:var(--teal);border:none;color:#fff;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">ES</button>
+      <button id="lang-btn" onclick="toggleLang()" style="background:var(--teal);border:none;color:#fff;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">Español</button>
     </div>
   </div>
   <div class="sbar">
@@ -404,7 +404,7 @@ function toggleLang(){
   applyLang();
 }
 function applyLang(){
-  document.getElementById('lang-btn').textContent=lang==='en'?'ES':'EN';
+  document.getElementById('lang-btn').textContent=lang==='en'?'Español':'English';
   document.getElementById('ss-tap-lbl').textContent=t('tapStart');
   document.querySelector('.ss-qr-lbl').textContent=t('ssQrLbl');
   document.querySelector('.ss-cash').textContent=t('ssCash');
