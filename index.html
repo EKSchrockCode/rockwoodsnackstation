@@ -123,7 +123,10 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
       <div class="ss-qr-lbl">Scan to pay via Venmo</div>
     </div>
     <div class="ss-cash">Also accepting cash &mdash; see the coffee tin on the counter</div>
-    <div class="ss-tap"><span class="dot"></span>TAP ANYWHERE TO START<span class="dot"></span></div>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+      <button id="lang-btn" onclick="toggleLang()" style="background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.3);color:#fff;border-radius:20px;padding:5px 14px;font-size:12px;font-weight:700;cursor:pointer;font-family:'DM Sans',sans-serif;">ES</button>
+    </div>
+    <div class="ss-tap"><span class="dot"></span><span id="ss-tap-lbl">TAP ANYWHERE TO START</span><span class="dot"></span></div>
   </div>
 </div>
 
@@ -345,6 +348,84 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
 <script>
 const ld=(k,fb)=>{try{return JSON.parse(localStorage.getItem(k))??fb;}catch{return fb;}};
 const sv=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+
+const T={
+  en:{
+    tapStart:'TAP ANYWHERE TO START',
+    whosGrabbing:"Who's grabbing a snack?",
+    searchName:'Search your name...',
+    pickSnacks:'Pick your snacks',
+    tapSnack:'Tap a snack to add it to your order',
+    doneNext:'Done, next person',
+    payVenmo:'Pay via the Venmo QR on the station',
+    hereWhat:"Here's what you grabbed today",
+    todayTotal:"Today's total",
+    currentBal:'Current balance',
+    returningIn:'Returning in',
+    enterPin:'Enter your 3-digit PIN',
+    incorrectPin:'Incorrect PIN — try again',
+    allPaidUp:'All paid up',
+    owes:'Owes',
+    credit:'Credit',
+    back:'Back',
+    sortAZ:'A-Z',
+    sortPop:'Popular',
+    ssQrLbl:'Scan to pay via Venmo',
+    ssCash:'Also accepting cash — see the coffee tin on the counter',
+  },
+  es:{
+    tapStart:'TOCA CUALQUIER PARTE PARA EMPEZAR',
+    whosGrabbing:'¿Quién va a tomar un snack?',
+    searchName:'Busca tu nombre...',
+    pickSnacks:'Elige tus snacks',
+    tapSnack:'Toca un snack para agregarlo a tu pedido',
+    doneNext:'Listo, siguiente persona',
+    payVenmo:'Paga con el código QR de Venmo en la estación',
+    hereWhat:'Esto es lo que tomaste hoy',
+    todayTotal:'Total de hoy',
+    currentBal:'Saldo actual',
+    returningIn:'Regresando en',
+    enterPin:'Ingresa tu PIN de 3 dígitos',
+    incorrectPin:'PIN incorrecto — inténtalo de nuevo',
+    allPaidUp:'Todo pagado',
+    owes:'Debe',
+    credit:'Crédito',
+    back:'Atrás',
+    sortAZ:'A-Z',
+    sortPop:'Popular',
+    ssQrLbl:'Escanea para pagar con Venmo',
+    ssCash:'También aceptamos efectivo — ve la lata de café en el mostrador',
+  }
+};
+let lang=ld('rss_lang','en');
+function t(k){return T[lang][k]||T.en[k];}
+function toggleLang(){
+  lang=lang==='en'?'es':'en';
+  sv('rss_lang',lang);
+  applyLang();
+}
+function applyLang(){
+  document.getElementById('lang-btn').textContent=lang==='en'?'ES':'EN';
+  document.getElementById('ss-tap-lbl').textContent=t('tapStart');
+  document.querySelector('.ss-qr-lbl').textContent=t('ssQrLbl');
+  document.querySelector('.ss-cash').textContent=t('ssCash');
+  document.querySelector('#p-emp .hdr-title').textContent=t('whosGrabbing');
+  document.getElementById('emp-s').placeholder=t('searchName');
+  document.getElementById('sn-hint').textContent=t('tapSnack');
+  document.querySelector('#p-conf .m-sub').textContent=t('hereWhat');
+  document.querySelector('#p-conf .m-note').textContent=t('payVenmo');
+  document.querySelector('#p-conf .m-btn.pri').textContent=t('doneNext');
+  document.querySelector('#p-pin .m-sub').textContent=t('enterPin');
+  document.getElementById('pin-err').textContent=t('incorrectPin');
+  document.querySelectorAll('.back-btn').forEach(b=>b.innerHTML=`&#8249; ${t('back')}`);
+  if(D.scr==='sn'){
+    document.getElementById('sn-title').textContent=D.emp?`${lang==='en'?'Hey':'Hola'} ${D.emp.name.split(' ')[0]}! ${t('pickSnacks')}`:t('pickSnacks');
+    const cnt=Object.values(D.cart).reduce((s,q)=>s+q,0);
+    const tot=Object.entries(D.cart).reduce((s,[id,q])=>{const sn=D.snacks.find(s=>s.id===id);return s+(sn?.price||0)*q;},0);
+    if(cnt>0)document.getElementById('sn-done-lbl').textContent=`✓ ${t('doneNext').split(',')[0]} — ${cnt} item${cnt>1?'s':''} ($${tot.toFixed(2)})`;
+    document.getElementById('sort-btn').textContent=snSort==='pop'?t('sortAZ'):t('sortPop');
+  }
+}
 const D={
   emps:ld('rss_e',[{id:'e1',name:'Eric Schrock'},{id:'e2',name:'Sample Employee'}]),
   snacks:ld('rss_s',[{id:'s1',name:'Chips',price:.75,image:'',desc:'Cheetos, Doritos, Pretzels'},{id:'s2',name:'Nuts',price:1,image:'',desc:'Almonds, Cashews, Peanuts'},{id:'s3',name:'Granola Bars',price:.75,image:'',desc:'Nature Valley, Cliff Bar'},{id:'s4',name:'Candy',price:.5,image:'',desc:'Snickers, Reeses, M&Ms'}]),
@@ -361,10 +442,11 @@ function go(name){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('on'));
   document.getElementById(pageMap[name]).classList.add('on');
   D.scr=name;clearInterval(confT);clearTimeout(idleT);
-  if(name==='ss'){D.cart={};D.emp=null;refreshQR();}
-  if(name==='emp'){renderEmps();startIdle();}
-  if(name==='sn'){renderSnacks();startIdle();}
-  if(name==='conf'){startConf();}
+  if(name==='ss'){D.cart={};D.emp=null;refreshQR();applyLang();}
+  if(name==='emp'){renderEmps();startIdle();applyLang();}
+  if(name==='sn'){renderSnacks();startIdle();applyLang();}
+  if(name==='conf'){startConf();applyLang();}
+  if(name==='pin'){applyLang();}
   if(name==='admin'){renderAEmps();renderASnacks();loadSets();}
   if(name==='rpt'){buildMoSel();renderRpt();}
 }
@@ -385,6 +467,7 @@ function refreshQR(){
   a.innerHTML=D.venmo?`<img src="${D.venmo}" style="width:100%;height:100%;object-fit:contain;background:#fff;padding:8px;">`:`<div style="font-size:32px">&#128179;</div><div style="color:rgba(255,255,255,.65);font-size:12px">Venmo QR</div>`;
 }
 refreshQR();
+applyLang();
 
 function doLogin(){
   if(document.getElementById('pw-in').value===D.pw){go('admin');}
@@ -396,7 +479,7 @@ const ml=k=>{const[y,m]=k.split('-');return new Date(y,m-1,1).toLocaleString('de
 const empSpend=(id)=>D.txs.filter(t=>t.eId===id&&!t.paid).reduce((s,t)=>s+t.total,0);
 const empPaid=(id)=>D.pmts.filter(p=>p.eId===id).reduce((s,p)=>s+p.amount,0);
 const empBal=(id)=>{const net=empSpend(id)-empPaid(id);return net;};
-const balLabel=(id)=>{const net=empBal(id);if(Math.abs(net)<0.01)return{text:'All paid up',color:'var(--green)'};if(net>0)return{text:`Owes $${net.toFixed(2)}`,color:'var(--red)'};return{text:`Credit $${Math.abs(net).toFixed(2)}`,color:'var(--green)'};};
+const balLabel=(id)=>{const net=empBal(id);if(Math.abs(net)<0.01)return{text:t('allPaidUp'),color:'var(--green)'};if(net>0)return{text:`${t('owes')} $${net.toFixed(2)}`,color:'var(--red)'};return{text:`${t('credit')} $${Math.abs(net).toFixed(2)}`,color:'var(--green)'};};
 const fmtDate=iso=>{const d=new Date(iso);return d.toLocaleDateString('default',{month:'short',day:'numeric',year:'numeric'})+' '+d.toLocaleTimeString('default',{hour:'numeric',minute:'2-digit'});};
 
 function renderEmps(){
@@ -414,7 +497,7 @@ let pinEntry='',pinTarget=null;
 function pickEmp(id){
   D.emp=D.emps.find(e=>e.id===id);D.cart={};
   const bl=balLabel(D.emp.id);
-  document.getElementById('sn-title').textContent=`Hey ${D.emp.name.split(' ')[0]}! Pick your snacks`;
+  document.getElementById('sn-title').textContent=`${lang==='en'?'Hey':'Hola'} ${D.emp.name.split(' ')[0]}! ${t('pickSnacks')}`;
   const balEl=document.getElementById('sn-bal');
   balEl.textContent=bl.text;balEl.style.color=bl.color;balEl.style.background=Math.abs(empBal(D.emp.id))<0.01?'#f0fdf4':bl.color==='var(--red)'?'var(--red-l)':'#f0fdf4';
   balEl.style.display='block';
@@ -430,7 +513,7 @@ function checkPin(){
 }
 function toggleSort(){
   snSort=snSort==='pop'?'az':'pop';
-  document.getElementById('sort-btn').textContent=snSort==='pop'?'A-Z':'Popular';
+  document.getElementById('sort-btn').textContent=snSort==='pop'?t('sortAZ'):t('sortPop');
   renderSnacks();
 }
 function sortedSnacks(){
@@ -446,7 +529,7 @@ function renderSnacks(){
   btn.style.display='none';
   const doneBar=document.getElementById('sn-done-bar');
   doneBar.style.display=cnt>0?'block':'none';
-  if(cnt>0)document.getElementById('sn-done-lbl').textContent=`✓ Done — ${cnt} item${cnt>1?'s':''} ($${tot.toFixed(2)})`;
+  if(cnt>0)document.getElementById('sn-done-lbl').textContent=`✓ ${lang==='en'?'Done':'Listo'} — ${cnt} item${cnt>1?'s':''} ($${tot.toFixed(2)})`;
   document.getElementById('sn-hint').style.display=cnt===0?'block':'none';
   g.innerHTML=sortedSnacks().map(sn=>{
     const q=D.cart[sn.id]||0;
@@ -464,13 +547,13 @@ function submitOrder(){
   const tx={id:`tx-${Date.now()}`,eId:D.emp.id,eName:D.emp.name,items,total:items.reduce((s,i)=>s+i.total,0),date:new Date().toISOString(),mo:mk(),paid:false};
   D.txs.push(tx);persist();
   const bal=empBal(D.emp.id);
-  document.getElementById('conf-ttl').textContent=`Thanks, ${D.emp.name.split(' ')[0]}!`;
+  document.getElementById('conf-ttl').textContent=`${lang==='en'?'Thanks':'Gracias'}, ${D.emp.name.split(' ')[0]}!`;
   const bl=balLabel(D.emp.id);
-  document.getElementById('conf-rec').innerHTML=items.map(i=>`<div class="r-row"><span>${i.qty}x ${i.name}</span><span>$${i.total.toFixed(2)}</span></div>`).join('')+`<div class="r-row tot"><span>Today's total</span><span>$${tx.total.toFixed(2)}</span></div><div class="r-row" style="border-top:1px solid var(--g200);padding-top:7px;font-weight:700;color:${bl.color}"><span>Current balance</span><span>${bl.text}</span></div>`;
+  document.getElementById('conf-rec').innerHTML=items.map(i=>`<div class="r-row"><span>${i.qty}x ${i.name}</span><span>$${i.total.toFixed(2)}</span></div>`).join('')+`<div class="r-row tot"><span>${t('todayTotal')}</span><span>$${tx.total.toFixed(2)}</span></div><div class="r-row" style="border-top:1px solid var(--g200);padding-top:7px;font-weight:700;color:${bl.color}"><span>${t('currentBal')}</span><span>${bl.text}</span></div>`;
   go('conf');
 }
 function startConf(){confS=10;updT();confT=setInterval(()=>{confS--;updT();if(confS<=0){clearInterval(confT);go('ss');}},1000);}
-function updT(){document.getElementById('t-bar').style.width=`${(confS/10)*100}%`;document.getElementById('t-lbl').textContent=`Returning in ${confS}s`;}
+function updT(){document.getElementById('t-bar').style.width=`${(confS/10)*100}%`;document.getElementById('t-lbl').textContent=`${t('returningIn')} ${confS}s`;}
 
 function renderAEmps(){
   const l=document.getElementById('emp-alist');
