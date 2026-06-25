@@ -303,6 +303,16 @@ input,select{font-family:'DM Sans',sans-serif;outline:none;}
         <input id="sec-email" class="a-inp" placeholder="secretary@rockwooddm.com" type="email" oninput="saveSecEmail()">
       </div>
       <div class="s-sec">
+        <div class="s-ttl">Change Password</div>
+        <div class="s-ht">Updates the password for your currently logged-in account</div>
+        <div style="display:flex;gap:8px">
+          <input id="new-pw" class="a-inp" type="password" placeholder="New password">
+          <button class="a-btn" onclick="changePw()">Save</button>
+        </div>
+        <div id="pw-ok" style="color:var(--green);font-size:12px;display:none;margin-top:4px">Password updated!</div>
+        <div id="pw-fail" style="color:var(--red);font-size:12px;display:none;margin-top:4px"></div>
+      </div>
+      <div class="s-sec">
         <div class="s-ttl">Idle Timeout</div>
         <div class="s-ht">How many seconds before the screen returns to the QR code if left unattended</div>
         <div style="display:flex;gap:8px;align-items:center">
@@ -790,6 +800,14 @@ function loadSets(){
   document.getElementById('sec-email').value=D.secEmail;
   document.getElementById('idle-in').value=D.idleSec;
   updVenmoP();
+}
+async function changePw(){
+  const p=document.getElementById('new-pw').value.trim();
+  if(!p)return;
+  const{error}=await sb.auth.updateUser({password:p});
+  document.getElementById('new-pw').value='';
+  if(!error){const m=document.getElementById('pw-ok');m.style.display='block';setTimeout(()=>m.style.display='none',2500);}
+  else{const m=document.getElementById('pw-fail');m.textContent=error.message;m.style.display='block';setTimeout(()=>m.style.display='none',3000);}
 }
 async function saveIdle(){const v=parseInt(document.getElementById('idle-in').value);if(!isNaN(v)&&v>=5){D.idleSec=v;await saveSettings();}}
 async function saveVenmo(){D.venmo=document.getElementById('venmo-in').value;await saveSettings();refreshQR();updVenmoP();}
